@@ -1,14 +1,11 @@
 <template>
   <p> LIST IMAGES </p>
-  <div id="app-5">
-        <img v-bind:src="'data:image/gif;base64,'+ imageAsBase64" />
-        <button v-on:click="download_first">Download First</button>
-  </div>
   <loading :active="isLoading"
         :can-cancel="false"></loading>
   <ul>
     <li v-for="img in images" :key="img.name">
       {{ img.name }} - {{ img.size }}
+      <img v-bind:src="'data:image/gif;base64,'+ img.img_data" />
     </li>
   </ul>
 </template>
@@ -22,6 +19,17 @@ import Loading from 'vue3-loading-overlay';
 // Import stylesheet
 // import 'vue3-loading-overlay/dist/vue-loading.css';
 
+let download_file = async (file) => {
+  return new Promise(
+    (resolve, reject) => {
+      file.download((err, data) => {
+        if (err) reject(err);
+        resolve(data.toString("base64"));
+      })
+    }
+  );
+};
+
 export default {
   name: "ImgList",
   data() {
@@ -30,8 +38,8 @@ export default {
       isLoading: true,
       fullPage: false,
       folder_url: "",
-      message: 'Hello Vue.js!',
-      imageAsBase64:""
+      start_idx: 0,
+      end_idx: 10
     }
   },
   components: {
@@ -48,33 +56,19 @@ export default {
     file.loadAttributes((err, folder) => {
       if (err) throw err
       console.log(folder.name) // 'Test Folder'
-      this.images = folder.children.map(x => ({name : x.name, size : x.size, timestamp : x.timestamp, obj : x}))
-      this.isLoading = false
+
+      let children_list = folder.children.slice(this.start_idx, this.end_idx) // Slice it and just get a small amount
+
+      Promise.all(children_list.map(async x => {
+          var img_data = await download_file(x);
+          console.log("Downloaded file");
+          return {name : x.name, size : x.size, timestamp : x.timestamp, img_data : img_data}
+        })
+      ).then((img_list) => {
+        this.isLoading = false;
+        this.images = img_list;
+      });
     })
-  },
-  methods: {
-    download_first: function () {
-
-      let file = File.fromURL(this.folder_url)
-      console.log(file)
-      
-      file.loadAttributes((err, folder) => {
-      if (err) throw err
-      console.log(folder.name) 
-
-      // Get the first file in the folder
-      const file = folder.children[0]
-      console.log(file.name) 
-      console.log(file.size) 
-
-      file.download((err, data) => {
-        if (err) throw err
-        console.log(data.toString("base64")) // "Hello World!"
-      this.imageAsBase64=data.toString("base64")
-      })
-    })
-    //   this.message = this.message.split('').reverse().join('')
-    }
   }
 }
 
