@@ -67,7 +67,6 @@ export default {
       console.log(file.name) 
       console.log(file.size) 
 
-      // Files can be used as normal shared files, for example:
       file.download((err, data) => {
         if (err) throw err
         console.log(data.toString("base64")) // "Hello World!"
