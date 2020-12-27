@@ -1,12 +1,14 @@
 <template>
   <p> LIST IMAGES </p>
-  <pagination v-model="page" :records="file_list.length" :per-page="per_page" @paginate="page_changed"/>
+  <div style="display:inline-block; margin: auto;">
+    <pagination v-model="page" :records="file_list.length" :per-page="per_page" @paginate="page_changed"/>
+  </div>
   <loading :active="isLoading"
         :can-cancel="false"></loading>
   <ul>
     <li v-for="img in images" :key="img.name">
       {{ img.name }} - {{ img.size }}
-      <img v-bind:src="'data:image/gif;base64,'+ img.img_data" />
+      <img v-bind:src="img.img_data"/>
     </li>
   </ul>
 </template>
@@ -20,6 +22,8 @@ import Loading from 'vue3-loading-overlay';
 // Import stylesheet
 // import 'vue3-loading-overlay/dist/vue-loading.css';
 import Pagination from 'v-pagination-3';
+import "bootstrap/dist/css/bootstrap.min.css"
+import "bootstrap-vue/dist/bootstrap-vue.css"
 
 let download_file = async (file) => {
   return new Promise(
@@ -43,7 +47,13 @@ export default {
       folder_url: "",
       page: 1,
       per_page: 15,
-      pagination_options: {edgeNavigation: true, chunksNavigation:'scroll'}
+      pagination_options: {
+        chunk: 10,
+        theme: 'bootstrap4',
+        format: true,
+        edgeNavigation: true,
+        chunksNavigation:'scroll'
+      }
     }
   },
   components: {
@@ -73,7 +83,7 @@ export default {
 
       Promise.all(children_list.map(async x => {
           var img_data = await download_file(x);
-          return {name : x.name, size : x.size, timestamp : x.timestamp, img_data : img_data}
+          return {name : x.name, size : x.size, timestamp : x.timestamp, img_data : 'data:image/gif;base64,'+ img_data}
         })
       ).then((img_list) => {
         this.isLoading = false;
