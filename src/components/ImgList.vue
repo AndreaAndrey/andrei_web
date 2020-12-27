@@ -60,12 +60,12 @@ export default {
       
       file.loadAttributes((err, folder) => {
       if (err) throw err
-      console.log(folder.name) // 'Test Folder'
+      console.log(folder.name) 
 
       // Get the first file in the folder
       const file = folder.children[0]
-      console.log(file.name) // "hello-world.txt"
-      console.log(file.size) // 12 (bytes)
+      console.log(file.name) 
+      console.log(file.size) 
 
       // Files can be used as normal shared files, for example:
       file.download((err, data) => {
