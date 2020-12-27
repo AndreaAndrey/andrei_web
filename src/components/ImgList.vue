@@ -79,6 +79,7 @@ export default {
   methods: {
     page_changed() {
       this.isLoading = true;
+      this.images = [];
       let children_list = this.file_list.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
 
       Promise.all(children_list.map(async x => {
