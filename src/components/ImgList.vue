@@ -11,6 +11,7 @@
 
 <script>
 import { File } from '@/../node_modules/megajs/dist/main.browser-es.js'
+import firebase from '@/firebaseinit.js';
 
 // Import component
 import Loading from 'vue3-loading-overlay';
@@ -23,14 +24,19 @@ export default {
     return {
       images: [],
       isLoading: true,
-      fullPage: false
+      fullPage: false,
+      folder_url: ""
     }
   },
   components: {
     Loading
   },
-  mounted() {
-    let file = File.fromURL("https://mega.nz/folder/5RkF2YAC#SGotZv983mS519FNUA3ttQ")
+  async mounted() {
+    const db = firebase.firestore();
+    const folder_url_doc = await db.collection('folder_url').doc('folder_url').get()
+    const folder_url = folder_url_doc.data()["url"]
+    this.folder_url = folder_url
+    let file = File.fromURL(folder_url)
     file.loadAttributes((err, folder) => {
       if (err) throw err
       console.log(folder.name) // 'Test Folder'
