@@ -42,7 +42,8 @@ export default {
       fullPage: false,
       folder_url: "",
       page: 1,
-      per_page: 15
+      per_page: 15,
+      pagination_options: {edgeNavigation: true, chunksNavigation:'scroll'}
     }
   },
   components: {
