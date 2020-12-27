@@ -1,15 +1,30 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <Nav v-show="isLogged"/>
+  <router-view/>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Nav from '@/components/Nav.vue'
+import firebase from '@/firebaseinit.js';
 
 export default {
-  name: 'App',
+  data() {
+    return {
+      isLogged: true
+    }
+  },
   components: {
-    HelloWorld
+    Nav
+  },
+  mounted() {
+    // not working.....
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        this.isLogged = true;
+      } else {
+        this.isLogged = false;
+      }
+    });
   }
 }
 </script>
@@ -21,6 +36,5 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
