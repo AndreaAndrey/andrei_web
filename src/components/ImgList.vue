@@ -1,5 +1,6 @@
 <template>
   <p> LIST IMAGES </p>
+  <pagination v-model="page" :records="file_list.length" :per-page="per_page" @paginate="page_changed"/>
   <loading :active="isLoading"
         :can-cancel="false"></loading>
   <ul>
@@ -18,6 +19,7 @@ import firebase from '@/firebaseinit.js';
 import Loading from 'vue3-loading-overlay';
 // Import stylesheet
 // import 'vue3-loading-overlay/dist/vue-loading.css';
+import Pagination from 'v-pagination-3';
 
 let download_file = async (file) => {
   return new Promise(
@@ -34,16 +36,18 @@ export default {
   name: "ImgList",
   data() {
     return {
+      file_list: [],
       images: [],
       isLoading: true,
       fullPage: false,
       folder_url: "",
-      start_idx: 0,
-      end_idx: 10
+      page: 1,
+      per_page: 15
     }
   },
   components: {
-    Loading
+    Loading,
+    Pagination
   },
   async mounted() {
     const db = firebase.firestore();
@@ -57,18 +61,24 @@ export default {
       if (err) throw err
       console.log(folder.name) // 'Test Folder'
 
-      let children_list = folder.children.slice(this.start_idx, this.end_idx) // Slice it and just get a small amount
+      this.file_list = folder.children;
+      this.page_changed();
+    })
+  },
+  methods: {
+    page_changed() {
+      this.isLoading = true;
+      let children_list = this.file_list.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
 
       Promise.all(children_list.map(async x => {
           var img_data = await download_file(x);
-          console.log("Downloaded file");
           return {name : x.name, size : x.size, timestamp : x.timestamp, img_data : img_data}
         })
       ).then((img_list) => {
         this.isLoading = false;
         this.images = img_list;
       });
-    })
+    }
   }
 }
 

@@ -11,6 +11,7 @@
     "core-js": "^3.6.5",
     "firebase": "^8.2.1",
     "megajs": "^0.17.2",
+    "v-pagination-3": "^0.1.2",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0",
     "vue3-loading-overlay": "0.0.0"
