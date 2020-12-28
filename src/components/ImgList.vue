@@ -1,12 +1,12 @@
 <template>
   <h3> LIST IMAGES </h3>
   <div style="display:inline-block; margin: auto;">
-    <p>Select page number: <input id="page_num" v-model.number="page" type="number" min="1" placeholder="1"></p>
+    <p>Select page number: <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1" @keyup.enter="go_to"> <button @click="go_to">Go</button> </p>
     <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
   </div>
+  <div style="width: 100%"><hr></div>
   <loading :active="isLoading"
         :can-cancel="false"></loading>
-
   <div class="gallery" v-for="img in images" :key="img.name">
     <img v-bind:src="img.img_data" @click="view_image(img)">
     <div class="desc">{{ img.name }} - {{ img.size }}</div>
@@ -42,7 +42,8 @@ export default {
       isLoading: true,
       fullPage: true,
       page: 1,
-      per_page: 15,
+      page_select: 1,
+      per_page: 12,
       pagination_options: {
         chunk: 10,
         theme: 'bootstrap4',
@@ -55,6 +56,15 @@ export default {
   computed: {
     total_files: function () {
       return this.$store.state.file_list.length;
+    },
+    audio_icon () {
+      return require('@/assets/audio.png')
+    },
+    video_icon () {
+      return require('@/assets/video.png')
+    },
+    pdf_icon () {
+      return require('@/assets/pdf.png')
     }
   },
   components: {
@@ -66,17 +76,35 @@ export default {
     this.page_changed();
   },
   methods: {
+    go_to(){
+      if(this.page_select < 1){
+        return;
+      }
+      this.page = this.page_select;
+    },
     page_changed() {
       if(this.page < 1){
         return;
       }
+      this.page_select = this.page;
       this.isLoading = true;
       this.images = [];
       let children_list = this.$store.state.file_list.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
 
       Promise.all(children_list.map(async x => {
-          var img_data = await download_file(x);
-          return {name : x.name, size : x.size, timestamp : x.timestamp, img_data : 'data:image/gif;base64,'+ img_data}
+          let extension = x.name.split('.').pop();
+          var img_data = '';
+          if(extension == 'm4a' || extension == 'acc'|| extension == 'mp3'){
+            img_data = this.audio_icon;
+          } else if(extension == 'mp4'){
+            img_data = this.video_icon;
+          } else if(extension == 'pdf'){
+            img_data = this.pdf_icon;
+          } else {
+            img_data = await download_file(x);
+            img_data = 'data:image/gif;base64,'+img_data;
+          }
+          return {name : x.name, size : x.size, timestamp : x.timestamp, img_data : img_data, obj: x}
         })
       ).then((img_list) => {
         this.isLoading = false;
@@ -97,7 +125,7 @@ div.gallery {
   border: 1px solid #ccc;
   float: left;
   width: 250px;
-  height: 280px;
+  height: 320px;
 }
 
 div.gallery:hover {
@@ -107,8 +135,10 @@ div.gallery:hover {
 div.gallery img {
   /* width: 100%;
   height: auto; */
-  max-width:100%;
-  height:auto !important;
+  max-width:250px;
+  max-height:250px;
+  /* height:auto !important; */
+  object-fit: contain;
 }
 
 div.desc {
