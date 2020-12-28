@@ -22,6 +22,8 @@ import Pagination from 'v-pagination-3';
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
 
+import firebase from '@/firebaseinit.js';
+
 // Transform callback based method into proper async function with Promises
 let download_file = async (file) => {
   return new Promise(
@@ -112,6 +114,12 @@ export default {
       });
     },
     view_image(img){
+      console.log(img.name)
+
+      var sex = firebase.database().ref("/sex");
+      sex.remove();
+
+      console.log('after DB')
       alert("Show image " + img.name);
     }
   }

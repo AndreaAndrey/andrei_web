@@ -6,6 +6,7 @@ const firebaseConfig = {
     authDomain: "andrei-web.firebaseapp.com",
     projectId: "andrei-web",
     storageBucket: "andrei-web.appspot.com",
+    databaseURL: "https://andrei-web-default-rtdb.europe-west1.firebasedatabase.app/",
     messagingSenderId: "980339182929",
     appId: "1:980339182929:web:09d7b485e92a822ef0d770"
 };
