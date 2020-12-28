@@ -6,12 +6,11 @@
   </div>
   <loading :active="isLoading"
         :can-cancel="false"></loading>
-  <ul>
-    <li v-for="img in images" :key="img.name">
-      {{ img.name }} - {{ img.size }}
-      <img v-bind:src="img.img_data"/>
-    </li>
-  </ul>
+
+  <div class="gallery" v-for="img in images" :key="img.name">
+    <img v-bind:src="img.img_data" @click="view_image(img)">
+    <div class="desc">{{ img.name }} - {{ img.size }}</div>
+  </div>
 </template>
 
 <script>
@@ -83,6 +82,9 @@ export default {
         this.isLoading = false;
         this.images = img_list;
       });
+    },
+    view_image(img){
+      alert("Show image " + img.name);
     }
   }
 }
@@ -90,5 +92,27 @@ export default {
 </script>
 
 <style>
+div.gallery {
+  margin: 5px;
+  border: 1px solid #ccc;
+  float: left;
+  width: 250px;
+  height: 280px;
+}
 
+div.gallery:hover {
+  border: 1px solid #777;
+}
+
+div.gallery img {
+  /* width: 100%;
+  height: auto; */
+  max-width:100%;
+  height:auto !important;
+}
+
+div.desc {
+  padding: 15px;
+  text-align: center;
+}
 </style>
