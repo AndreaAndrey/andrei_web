@@ -10,6 +10,8 @@
   <div class="gallery" v-for="img in images" :key="img.name">
     <img v-bind:src="img.img_data" @click="view_image(img)">
     <div class="desc">{{ img.name }} - {{ img.size }}</div>
+    <button @click="addTag(img)">Add Tag</button>
+    <input v-model="tag_input" placeholder="edit me">
   </div>
 </template>
 
@@ -116,12 +118,33 @@ export default {
     view_image(img){
       console.log(img.name)
 
-      var sex = firebase.database().ref("/sex");
-      sex.remove();
+      // var sex = firebase.database().ref("/sex");
+      // sex.remove();
 
-      console.log('after DB')
       alert("Show image " + img.name);
+    },
+    addTag(img){
+      // `this` inside methods points to the Vue instance
+
+      console.log(this.tag_input)
+
+      console.log(img.name)
+
+      var sex = firebase.database().ref("/sex");
+
+
+      sex.once('value', function(snapshot) {
+
+        snapshot.forEach(function(childSnapshot) {
+          var key = childSnapshot.key;
+          var data = childSnapshot.val();
+          console.log(key)
+          console.log(data)
+
+        });
+      });
     }
+
   }
 }
 
