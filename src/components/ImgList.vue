@@ -1,6 +1,12 @@
 <template>
   <h3> LIST IMAGES </h3>
   <div style="display:inline-block; margin: auto;">
+    <div class="tag-list">
+        <span class="tag" v-for="tag in tag_list" v-bind:key="tag">
+          {{tag}}
+        </span>
+    </div>
+    <p>Search by tag: <input v-model="tag_search" placeholder="edit me"><button @click="search_by_tag">Search</button> </p>
     <p>Select page number: <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1" @keyup.enter="go_to"> <button @click="go_to">Go</button> </p>
     <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
   </div>
@@ -11,7 +17,7 @@
     <img v-bind:src="img.img_data" @click="view_image(img)">
     <div class="desc">{{ img.name }} - {{ img.size }}</div>
     <button @click="addTag(img)">Add Tag</button>
-    <input v-model="tag_input" placeholder="edit me">
+    <input :id="'input_tag'+img.name" placeholder="edit me">
   </div>
 </template>
 
@@ -54,10 +60,12 @@ export default {
   data() {
     return {
       images: [],
+      tag_list: [],
       isLoading: true,
       fullPage: true,
       page: 1,
       page_select: 1,
+      tag_search: '',
       per_page: 12,
       pagination_options: {
         chunk: 10,
@@ -89,6 +97,7 @@ export default {
   async mounted() {
     await this.$store.dispatch('getFiles');
     this.page_changed();
+    this.retrieve_tags();
   },
   methods: {
     go_to(){
@@ -126,25 +135,65 @@ export default {
         this.images = img_list;
       });
     },
+    retrieve_tags(){
+      // Find data using the "lists" reference
+      let self = this;
+      firebase.database().ref("/tag_list").on('value', function(snapshot){
+        let returnArr = [];
+        //console.log(JSON.stringify(snapshot.val(), null, 2))
+        snapshot.forEach(function(childSnapshot) {
+          returnArr.push(childSnapshot.val()['tag_name']);
+        });
+        self.tag_list = returnArr;
+      });
+
+    },
     view_image(img){
       console.log(img.name)
-      //remove a path
-      // var sex = firebase.database().ref("/sex");
-      // sex.remove();
 
       alert("Show image " + img.name);
     },
+    search_by_tag(){
+      console.log(this.tag_search)
+
+      var returnArr = [];
+
+      let tagging_db = firebase.database().ref("/tagging_db/"+this.tag_search);
+
+      tagging_db.once('value', function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          returnArr.push(childSnapshot.val()['filename']);
+          console.log(childSnapshot.val()['filename']);
+        });
+      });
+      console.log(returnArr)
+      console.log(returnArr.length)
+      //remove a path
+      // var sex = firebase.database().ref("/sex");
+      // sex.remove();
+    },
     addTag(img){
+      let input_tag = document.getElementById('input_tag'+img.name).value
+
+      //add the tag to the datbase tag_list
+      let tag_list_ref = firebase.database().ref("/tag_list");
+      tag_list_ref.child(filename_2_firekey(input_tag)).set({
+        tag_name: input_tag
+      });
+
       //tagging_db is pointing to the path /tagging_db in DB
-      var tagging_db = firebase.database().ref("/tagging_db");
+      let tagging_db = firebase.database().ref("/tagging_db");
+
       //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
-      var tagref = tagging_db.child(this.tag_input).child(filename_2_firekey(img.name));
+      var tagref = tagging_db.child(input_tag).child(filename_2_firekey(img.name));
       //Setting data to that path
       tagref.set({
         filename: img.name,
         size: img.size
       });
-      console.log('Added '+ img.name + ' to tag ' + this.tag_input)
+      console.log('Added '+ img.name + ' to tag ' + input_tag)
+
+      document.getElementById('input_tag'+img.name).value='';
 
       //read utilities to be used in the future
       // tagging_db.once('value', function(snapshot) {
@@ -194,5 +243,34 @@ div.gallery img {
 div.desc {
   padding: 15px;
   text-align: center;
+}
+
+.tag-list{
+  border: 1px solid #aa8;
+  margin: 10px;
+  padding: 10px;
+  ul > * {
+    display: inline-block;
+  }
+}
+.tag {
+  margin: 2px 3px;
+  padding: 5px 8px 5px 10px;
+  border-radius:5px;
+  background-color: #9bd;
+  color: #ffff;
+  .delete-btn{
+    $db-size: 18px;
+    $db-color: $color-neg;
+    width: $db-size;
+    height: $db-size;
+    padding: 0 5px 0 4px;
+    color: $db-color;
+    border: 1px solid $db-color;
+    border-radius: 25%;
+    background: none;
+    font-size: 1em;
+    line-height: $db-size - 6;
+  }
 }
 </style>
