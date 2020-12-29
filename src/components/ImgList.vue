@@ -37,6 +37,17 @@ let download_file = async (file) => {
     }
   );
 };
+//to be moved where it belongs
+function filename_2_firekey (filename) {
+  const encoded = window.btoa(filename)
+    return encoded;
+}
+//to be moved where it belongs
+// function firekey_2_filename (hash) {
+//   const decoded = window.atob(hash)
+
+//     return decoded;
+// }
 
 export default {
   name: "ImgList",
@@ -117,32 +128,40 @@ export default {
     },
     view_image(img){
       console.log(img.name)
-
+      //remove a path
       // var sex = firebase.database().ref("/sex");
       // sex.remove();
 
       alert("Show image " + img.name);
     },
     addTag(img){
-      // `this` inside methods points to the Vue instance
-
-      console.log(this.tag_input)
-
-      console.log(img.name)
-
-      var sex = firebase.database().ref("/sex");
-
-
-      sex.once('value', function(snapshot) {
-
-        snapshot.forEach(function(childSnapshot) {
-          var key = childSnapshot.key;
-          var data = childSnapshot.val();
-          console.log(key)
-          console.log(data)
-
-        });
+      //tagging_db is pointing to the path /tagging_db in DB
+      var tagging_db = firebase.database().ref("/tagging_db");
+      //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
+      var tagref = tagging_db.child(this.tag_input).child(filename_2_firekey(img.name));
+      //Setting data to that path
+      tagref.set({
+        filename: img.name,
+        size: img.size
       });
+      console.log('Added '+ img.name + ' to tag ' + this.tag_input)
+
+      //read utilities to be used in the future
+      // tagging_db.once('value', function(snapshot) {
+
+      //   console.log(JSON.stringify(snapshot.val(), null, 2));
+
+      // });
+      // sex.once('value', function(snapshot) {
+
+      //   snapshot.forEach(function(childSnapshot) {
+      //     var key = childSnapshot.key;
+      //     var data = childSnapshot.val();
+      //     console.log(key)
+      //     console.log(data)
+
+      //   });
+      // });
     }
 
   }
