@@ -4,6 +4,7 @@
     <div class="tag-list">
         <span class="tag" v-for="tag in tag_list" v-bind:key="tag">
           {{tag}}
+          <button @click="add_tag_search(tag)">↓</button>
         </span>
     </div>
     <p>Search by tag: <input v-model="tag_search" placeholder="edit me"><button @click="search_by_tag">Search</button> </p>
@@ -201,6 +202,12 @@ export default {
       //remove a path
       // var sex = firebase.database().ref("/sex");
       // sex.remove();
+    },
+    add_tag_search(tag_){
+      console.log(tag_);
+      this.tag_search = tag_;
+      this.search_by_tag();
+
     },
     addTag(img){
       let input_tag = document.getElementById('input_tag'+img.name).value
