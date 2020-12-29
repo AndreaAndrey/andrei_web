@@ -32,6 +32,13 @@ import "bootstrap-vue/dist/bootstrap-vue.css"
 
 import firebase from '@/firebaseinit.js';
 
+
+// let asyncFilter = async (arr, predicate) => {
+//           const results = await Promise.all(arr.map(predicate));
+
+//           return arr.filter((_v, index) => results[index]);
+//         }
+
 // Transform callback based method into proper async function with Promises
 let download_file = async (file) => {
   return new Promise(
@@ -61,6 +68,7 @@ export default {
     return {
       images: [],
       tag_list: [],
+      file_list_filtered: [],
       isLoading: true,
       fullPage: true,
       page: 1,
@@ -80,6 +88,9 @@ export default {
     total_files: function () {
       return this.$store.state.file_list.length;
     },
+    file_list: function () {
+      return this.$store.state.file_list;
+    },
     audio_icon () {
       return require('@/assets/audio.png')
     },
@@ -96,8 +107,12 @@ export default {
   },
   async mounted() {
     await this.$store.dispatch('getFiles');
+    this.file_list_filtered=this.file_list;
     this.page_changed();
     this.retrieve_tags();
+  },
+  actions: {
+
   },
   methods: {
     go_to(){
@@ -113,7 +128,9 @@ export default {
       this.page_select = this.page;
       this.isLoading = true;
       this.images = [];
-      let children_list = this.$store.state.file_list.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
+      console.log('page_changed');
+      console.log(this.file_list);
+      let children_list = this.file_list_filtered.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
 
       Promise.all(children_list.map(async x => {
           let extension = x.name.split('.').pop();
@@ -154,20 +171,33 @@ export default {
       alert("Show image " + img.name);
     },
     search_by_tag(){
-      console.log(this.tag_search)
+      let self = this;
+      console.log('self.tag_search');
 
-      var returnArr = [];
+      console.log(self.tag_search);
 
-      let tagging_db = firebase.database().ref("/tagging_db/"+this.tag_search);
+      if (self.tag_search){
+        var returnArr = [];
 
-      tagging_db.once('value', function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          returnArr.push(childSnapshot.val()['filename']);
-          console.log(childSnapshot.val()['filename']);
-        });
+        let tagging_db = firebase.database().ref("/tagging_db/"+self.tag_search);
+
+        tagging_db.once('value', function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+            returnArr.push(childSnapshot.val()['filename']);
+          });
+          console.log(returnArr);
+
+          self.file_list_filtered = self.file_list.filter(file => returnArr.includes(file.name));
+          console.log(self.file_list_filtered);
+          self.page_changed();
+
       });
-      console.log(returnArr)
-      console.log(returnArr.length)
+    }else{
+      self.file_list_filtered = self.file_list;
+      self.page_changed();
+
+    }
+
       //remove a path
       // var sex = firebase.database().ref("/sex");
       // sex.remove();
