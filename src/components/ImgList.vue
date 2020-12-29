@@ -2,13 +2,13 @@
   <h3> LIST IMAGES </h3>
   <div style="display:inline-block; margin: auto;">
     <div class="tag-list">
-        <span class="tag" v-for="tag in tag_list" v-bind:key="tag">
-          {{tag}}
-          <button @click="add_tag_search(tag)">↓</button>
+        <h5>Common Tags</h5>
+        <span class="tag" v-for="tag in tag_list.slice(0,10)" v-bind:key="tag.tag" v-bind:class="{ active_tag: tag_search == tag.tag }" @click="add_tag_search(tag.tag)">
+          {{tag.tag}}
         </span>
     </div>
-    <p>Search by tag: <input v-model="tag_search" placeholder="edit me"><button @click="search_by_tag">Search</button> </p>
-    <p>Select page number: <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1" @keyup.enter="go_to"> <button @click="go_to">Go</button> </p>
+    <p>Search by <b>tag</b>: <input v-model="tag_search" placeholder="edit me" @keyup.enter="search_by_tag"> <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button></p>
+    <p>Select <b>page number</b>: <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1" @keyup.enter="go_to"> <button @click="go_to">Go</button> </p>
     <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
   </div>
   <div style="width: 100%"><hr></div>
@@ -32,13 +32,6 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
 
 import firebase from '@/firebaseinit.js';
-
-
-// let asyncFilter = async (arr, predicate) => {
-//           const results = await Promise.all(arr.map(predicate));
-
-//           return arr.filter((_v, index) => results[index]);
-//         }
 
 // Transform callback based method into proper async function with Promises
 let download_file = async (file) => {
@@ -68,29 +61,24 @@ export default {
   data() {
     return {
       images: [],
-      tag_list: [],
-      file_list_filtered: [],
       isLoading: true,
       fullPage: true,
       page: 1,
       page_select: 1,
       tag_search: '',
       per_page: 12,
-      pagination_options: {
-        chunk: 10,
-        theme: 'bootstrap4',
-        format: true,
-        edgeNavigation: true,
-        chunksNavigation:'scroll'
-      }
+      filter_condition: null
     }
   },
   computed: {
     total_files: function () {
-      return this.$store.state.file_list.length;
+      return this.file_list.length;
     },
     file_list: function () {
-      return this.$store.state.file_list;
+      return this.$store.getters.get_list(this.filter_condition);
+    },
+    tag_list: function () {
+      return this.$store.state.tag_list;
     },
     audio_icon () {
       return require('@/assets/audio.png')
@@ -107,13 +95,11 @@ export default {
     Pagination
   },
   async mounted() {
-    await this.$store.dispatch('getFiles');
-    this.file_list_filtered=this.file_list;
-    this.page_changed();
-    this.retrieve_tags();
-  },
-  actions: {
+    // Not awaiting this as this is continuously run to get push updates from DB
+    this.$store.dispatch('getTags');
 
+    await this.$store.dispatch('getFiles');
+    this.page_changed();
   },
   methods: {
     go_to(){
@@ -129,9 +115,8 @@ export default {
       this.page_select = this.page;
       this.isLoading = true;
       this.images = [];
-      console.log('page_changed');
-      console.log(this.file_list);
-      let children_list = this.file_list_filtered.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
+
+      let children_list = this.file_list.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
 
       Promise.all(children_list.map(async x => {
           let extension = x.name.split('.').pop();
@@ -153,61 +138,36 @@ export default {
         this.images = img_list;
       });
     },
-    retrieve_tags(){
-      // Find data using the "lists" reference
-      let self = this;
-      firebase.database().ref("/tag_list").on('value', function(snapshot){
-        let returnArr = [];
-        //console.log(JSON.stringify(snapshot.val(), null, 2))
-        snapshot.forEach(function(childSnapshot) {
-          returnArr.push(childSnapshot.val()['tag_name']);
-        });
-        self.tag_list = returnArr;
-      });
-
-    },
     view_image(img){
       console.log(img.name)
 
       alert("Show image " + img.name);
     },
     search_by_tag(){
-      let self = this;
-      console.log('self.tag_search');
+      this.page = 1; // reset page to the first
 
-      console.log(self.tag_search);
+      if(this.tag_search){
+        let valid_names = []
+        this.tag_list.forEach(tag => {
+          if(tag.tag.includes(this.tag_search)){
+            const tag_files = tag.files.map(f => f.filename);
+            valid_names.push(...tag_files)
+          }
+        });
 
-      if (self.tag_search){
-        var returnArr = [];
-
-        let tagging_db = firebase.database().ref("/tagging_db/"+self.tag_search);
-
-        tagging_db.once('value', function(snapshot) {
-          snapshot.forEach(function(childSnapshot) {
-            returnArr.push(childSnapshot.val()['filename']);
-          });
-          console.log(returnArr);
-
-          self.file_list_filtered = self.file_list.filter(file => returnArr.includes(file.name));
-          console.log(self.file_list_filtered);
-          self.page_changed();
-
-      });
-    }else{
-      self.file_list_filtered = self.file_list;
-      self.page_changed();
-
-    }
-
-      //remove a path
-      // var sex = firebase.database().ref("/sex");
-      // sex.remove();
+        this.filter_condition = file => valid_names.includes(file.name);
+      } else {
+        this.filter_condition = null;
+      }
+      this.page_changed();
     },
     add_tag_search(tag_){
-      console.log(tag_);
       this.tag_search = tag_;
       this.search_by_tag();
-
+    },
+    delete_search(){
+      this.tag_search = "";
+      this.search_by_tag();
     },
     addTag(img){
       let input_tag = document.getElementById('input_tag'+img.name).value
@@ -231,25 +191,7 @@ export default {
       console.log('Added '+ img.name + ' to tag ' + input_tag)
 
       document.getElementById('input_tag'+img.name).value='';
-
-      //read utilities to be used in the future
-      // tagging_db.once('value', function(snapshot) {
-
-      //   console.log(JSON.stringify(snapshot.val(), null, 2));
-
-      // });
-      // sex.once('value', function(snapshot) {
-
-      //   snapshot.forEach(function(childSnapshot) {
-      //     var key = childSnapshot.key;
-      //     var data = childSnapshot.val();
-      //     console.log(key)
-      //     console.log(data)
-
-      //   });
-      // });
     }
-
   }
 }
 
@@ -290,6 +232,7 @@ div.desc {
     display: inline-block;
   }
 }
+
 .tag {
   margin: 2px 3px;
   padding: 5px 8px 5px 10px;
@@ -309,5 +252,10 @@ div.desc {
     font-size: 1em;
     line-height: $db-size - 6;
   }
+}
+
+.active_tag {
+  background-color: rgb(48, 145, 241) !important;
+  font-weight: bold;
 }
 </style>
