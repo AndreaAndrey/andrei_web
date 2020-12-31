@@ -12,6 +12,23 @@
     <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
   </div>
   <div style="width: 100%"><hr></div>
+
+    <modal ref="modalName">
+      <template v-slot:header>
+        <h1>Modal title</h1>
+      </template>
+
+      <template v-slot:body>
+        <img v-bind:src="img_panel">
+      </template>
+
+      <template v-slot:footer>
+        <div>
+          <button @click="$refs.modalName.closeModal()">Cancel</button>
+          <button @click="$refs.modalName.closeModal()">Save</button>
+        </div>
+      </template>
+    </modal>
   <loading :active="isLoading"
         :can-cancel="false"></loading>
   <div class="gallery" v-for="img in images" :key="img.name">
@@ -28,6 +45,7 @@ import Loading from 'vue3-loading-overlay';
 // Import stylesheet
 // import 'vue3-loading-overlay/dist/vue-loading.css';
 import Pagination from 'v-pagination-3';
+import Modal from './MediaPanel';
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
 
@@ -61,6 +79,7 @@ export default {
   data() {
     return {
       images: [],
+      img_panel: '',
       isLoading: true,
       fullPage: true,
       page: 1,
@@ -92,7 +111,8 @@ export default {
   },
   components: {
     Loading,
-    Pagination
+    Pagination,
+    Modal
   },
   async mounted() {
     // Not awaiting this as this is continuously run to get push updates from DB
@@ -139,9 +159,11 @@ export default {
       });
     },
     view_image(img){
-      console.log(img.name)
+      console.log(img.name);
 
-      alert("Show image " + img.name);
+      this.img_panel= img.img_data;
+
+      this.$refs.modalName.openModal();
     },
     search_by_tag(){
       this.page = 1; // reset page to the first
