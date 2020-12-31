@@ -3,7 +3,7 @@
   <div style="display:inline-block; margin: auto;">
     <div class="tag-list">
         <h5>Common Tags</h5>
-        <span class="tag" v-for="tag in tag_list.slice(0,10)" v-bind:key="tag.tag" v-bind:class="{ active_tag: tag_search == tag.tag }" @click="add_tag_search(tag.tag)">
+        <span class="tag" v-for="tag in tag_list.slice(0,10)" v-bind:key="tag.tag" v-bind:class="{ active_tag: tag_search.split(' ').includes(tag.tag)}" @click="add_tag_search(tag.tag)">
           {{tag.tag}}
         </span>
     </div>
@@ -171,7 +171,8 @@ export default {
       if(this.tag_search){
         let valid_names = []
         this.tag_list.forEach(tag => {
-          if(tag.tag.includes(this.tag_search)){
+          if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
+          // if(tag.tag.includes(this.tag_search)){
             const tag_files = tag.files.map(f => f.filename);
             valid_names.push(...tag_files)
           }
