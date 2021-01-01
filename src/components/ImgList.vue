@@ -9,6 +9,31 @@
     </div>
     <p>Search by <b>tag</b>: <input v-model="tag_search" placeholder="edit me" @keyup.enter="search_by_tag"> <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button></p>
     <p>Select <b>page number</b>: <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1" @keyup.enter="go_to"> <button @click="go_to">Go</button> </p>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" id="all_c" value="all" v-model="all_c">
+      <label class="form-check-label" for="all_c">All</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" id="image_c" value="image" v-model="image_c" :disabled="all_c">
+      <label class="form-check-label" for="image_c">Image</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" id="video_c" value="video" v-model="video_c" :disabled="all_c">
+      <label class="form-check-label" for="video_c">Video</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" id="audio_c" value="audio" v-model="audio_c" :disabled="all_c">
+      <label class="form-check-label" for="audio_c">Audio</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" id="pdf_c" value="pdf" v-model="pdf_c" :disabled="all_c">
+      <label class="form-check-label" for="pdf_c">PDF</label>
+    </div>
+  </div>
+
+  <div style="width: 100%;"><hr></div>
+
+  <div style="display:inline-block; margin: auto;">
     <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
   </div>
   <div style="width: 100%"><hr></div>
@@ -45,6 +70,11 @@ let download_file = async (file) => {
   );
 };
 
+const img_ext = ["jpg", "JPG", "jpeg", "gif", "PNG", "png"];
+const vid_ext = ["mp4"];
+const aud_ext = ["m4a", "acc", "mp3"];
+const pdf_ext = ["pdf", "PDF"];
+
 export default {
   name: "ImgList",
   data() {
@@ -59,12 +89,28 @@ export default {
       tag_search: '',
       per_page: 12,
       filter_condition: null,
-      type_condition: null
+      all_c: true,
+      image_c: false,
+      video_c: false,
+      audio_c: false,
+      pdf_c: false
     }
   },
   computed: {
     total_files: function () {
       return this.file_list.length;
+    },
+    type_condition: function () {
+      if(this.all_c || (!this.image_c && !this.video_c && !this.audio_c && !this.pdf_c)) {
+        return null;
+      } else {
+        var allowed = []
+        if(this.image_c) allowed.push(...img_ext);
+        if(this.video_c) allowed.push(...vid_ext);
+        if(this.audio_c) allowed.push(...aud_ext);
+        if(this.pdf_c)   allowed.push(...pdf_ext);
+        return file => allowed.includes(file.name.split('.').pop());
+      }
     },
     file_list: function () {
       var total_filter = null;
@@ -124,11 +170,11 @@ export default {
       Promise.all(children_list.map(async x => {
           let extension = x.name.split('.').pop();
           var media_data = '';
-          if(extension == 'm4a' || extension == 'acc'|| extension == 'mp3'){
+          if(aud_ext.includes(extension)){
             media_data = this.audio_icon;
-          } else if(extension == 'mp4'){
+          } else if(vid_ext.includes(extension)){
             media_data = this.video_icon;
-          } else if(extension == 'pdf'){
+          } else if(pdf_ext.includes(extension)){
             media_data = this.pdf_icon;
           } else {
             media_data = await download_file(x);
