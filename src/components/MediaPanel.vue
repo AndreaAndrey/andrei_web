@@ -26,7 +26,7 @@
 
           <div class="modal-footer">
             Tag list
-            <input id="input_tag" placeholder="Tag list" v-model="tag_list">
+            <input id="input_tag" :placeholder="file_tags" v-model="tag_list">
             <button @click="addTag">Save</button>
             <button class="modal-default-button" @click="$emit('close')">
               Close
@@ -70,6 +70,9 @@ export default {
     Loading
   },
   computed: {
+    file2tags: function () {
+      return this.$store.state.file2tags;
+    },
     file_ext(){
       return this.panel_obj.name.split('.').pop();
     },
@@ -84,6 +87,15 @@ export default {
       } else {
         return 'img';
       }
+    },
+    file_tags(){
+      var tags = '';
+      if(this.panel_obj.name in this.file2tags){
+        this.file2tags[this.panel_obj.name].forEach(t => {
+          tags = tags + t + " ";
+        });
+      }
+      return tags;
     }
   },
   watch: {

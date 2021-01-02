@@ -19,10 +19,11 @@ let load_attributes = async (file) => {
 
 export default createStore({
   state: {
-    file_list: [],
-    folder_url: "",
-    tag_list: [],
-    tag_loading: false
+    file_list: [], // list of MEGA files with name, size and the download function
+    folder_url: "", // remote MEGA URL
+    tag_list: [], // list of tags where for each tag there is a list of files
+    tag_loading: false, // if the DB remote connection is alive or not
+    file2tags: {} // dictionary where for each file, the value is the tags
   },
   mutations: {
     setFolderUrl(state, url) {
@@ -36,6 +37,9 @@ export default createStore({
     },
     setTagList(state, tl){
       state.tag_list = tl;
+    },
+    set_file2tags(state, ft){
+      state.file2tags = ft;
     }
   },
   actions: {
@@ -53,24 +57,35 @@ export default createStore({
         return false;
       }
     },
-    async getTags({commit, state}) {
+    getTags({commit, state}) {
       if(!state.tag_loading){
         commit("setTagLoading", true);
         firebase.database().ref("/tagging_db").on('value', function(snapshot){
             let returnArr = [];
+            var file2tags = {};
             snapshot.forEach(function(childSnapshot) {
               const value = childSnapshot.val();
-              let files =Object.keys(value)
+              let files = Object.keys(value)
               .map(function(key) {
-                  return value[key];
+                return value[key];
               });
+              const tag = childSnapshot.key;
               returnArr.push({
-                tag: childSnapshot.key,
+                tag: tag,
                 files: files
+              });
+              files.forEach(e => {
+                if (e.filename in file2tags) {
+                  file2tags[e.filename].push(tag);
+                } else {
+                  file2tags[e.filename] = [tag];
+                }
               });
             });
             returnArr.sort((a, b) => {return b.files.length - a.files.length});
             commit("setTagList", returnArr);
+            commit("set_file2tags", file2tags);
+            console.log(file2tags);
         });
       }
     }

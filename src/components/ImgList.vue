@@ -8,7 +8,6 @@
         </span>
     </div>
     <p>Search by <b>tag</b>: <input v-model="tag_search" placeholder="edit me" @keyup.enter="search_by_tag"> <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button></p>
-    <p>Select <b>page number</b>: <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1" @keyup.enter="go_to"> <button @click="go_to">Go</button> </p>
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="checkbox" id="all_c" value="all" v-model="all_c">
       <label class="form-check-label" for="all_c">All</label>
@@ -34,6 +33,7 @@
   <div style="width: 100%;"><hr></div>
 
   <div style="display:inline-block; margin: auto;">
+    <p>Select <b>page number</b>: <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1" @keyup.enter="go_to"> <button @click="go_to">Go</button> </p>
     <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
   </div>
   <div style="width: 100%"><hr></div>
@@ -45,6 +45,7 @@
   <div class="gallery" v-for="img in images" :key="img.name">
     <img :src="img.media_data" @click="view_image(img)">
     <div class="desc">{{ img.name }}</div>
+    <div class="desc">Tags: <span class="tag" v-for="t in file2tags[img.name]" :key="t + img.name">{{t}}</span></div>
   </div>
 </template>
 
@@ -128,6 +129,9 @@ export default {
     tag_list: function () {
       return this.$store.state.tag_list;
     },
+    file2tags: function () {
+      return this.$store.state.file2tags;
+    },
     audio_icon () {
       return require('@/assets/audio.png')
     },
@@ -148,7 +152,7 @@ export default {
     this.$store.dispatch('getTags');
 
     await this.$store.dispatch('getFiles');
-    this.page_changed();
+    // this.page_changed(); // No need because of the watcher
   },
   methods: {
     go_to(){
@@ -218,6 +222,17 @@ export default {
     delete_search(){
       this.tag_search = "";
       this.search_by_tag();
+    }
+  },
+  watch: {
+    file_list: {
+      handler(n, o){
+        console.log("Watch file_list");
+        if(n.length != o.length){
+          this.search_by_tag();
+        }
+      },
+      deep: false
     }
   }
 }
