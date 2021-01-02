@@ -14,12 +14,12 @@
             <img class="media_tag" v-if="file_type == 'img'" :src="panel_obj.media_data">
 
             <video class="media_tag" v-if="file_type == 'video'" controls>
-              <source :src="media_data" type="video/mp4">
+              <source :src="'data:video/mp4;base64,'+media_data" type="video/mp4">
             Your browser does not support the video tag.
             </video>
 
             <audio v-if="file_type == 'audio'" controls>
-              <source :src="media_data" type="audio/mpeg">
+              <source :src="'data:audio/ogg;base64,'+media_data" type="audio/mpeg">
             Your browser does not support the audio element.
             </audio>
           </div>
@@ -56,6 +56,39 @@ function filename_2_firekey (filename) {
 
 export default {
   name: "Modal",
+  watch: {
+    // _panel_obj: {
+    //   handler(val){
+    //     console.log("Whatcher");
+    //     console.log(val);
+    //   },
+    //   deep:true,
+    //   immediate: true,
+
+    // }
+    // ,
+    _panel_obj_name: {
+      handler(){
+        console.log("Whatcher");
+        var copied_panel = Object.assign({}, this.panel_obj);
+        //console.log('Prop changed: ', n, ' | was: ', o);
+        if(this.file_type != 'img'){
+          this.isLoading = true;
+          console.log("W Video");
+          copied_panel.obj.download((err, data) => {
+            if (err){
+              this.media_data = '';
+            }
+            this.media_data = data.toString("base64");
+            console.log(this.media_data);
+            this.isLoading = false;
+          });
+        }
+      },
+      deep:true,
+      immediate: true,
+    }
+  },
   props: {
     panel_obj: Object,
   },
@@ -70,6 +103,14 @@ export default {
     Loading
   },
   computed: {
+    _panel_obj(){
+      console.log('comp panel obj')
+      return this.panel_obj;
+    },
+    _panel_obj_name(){
+      return this.panel_obj.name;
+    }
+    ,
     file2tags: function () {
       return this.$store.state.file2tags;
     },
@@ -96,23 +137,6 @@ export default {
         });
       }
       return tags;
-    }
-  },
-  watch: {
-    'panel_obj.name': function(n, o) {
-      console.log("Whatcher");
-      console.log('Prop changed: ', n, ' | was: ', o);
-      if(this.file_type != 'img'){
-        this.isLoading = true;
-        console.log("W Video");
-        this.panel_obj.obj.download((err, data) => {
-          if (err){
-            this.media_data = '';
-          }
-          this.media_data = data.toString("base64");
-          this.isLoading = false;
-        });
-      }
     }
   },
   methods: {
