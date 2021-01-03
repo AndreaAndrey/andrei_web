@@ -9,6 +9,11 @@
     </div>
     <p>Search by <b>tag</b>: <input v-model="tag_search" placeholder="edit me" @keyup.enter="search_by_tag"> <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button></p>
     <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" id="and_c" value="and" v-model="and_c">
+      <label class="form-check-label" for="and_c">AND/OR (active -> AND)</label>
+    </div>
+    <br>
+    <div class="form-check form-check-inline">
       <input class="form-check-input" type="checkbox" id="all_c" value="all" v-model="all_c">
       <label class="form-check-label" for="all_c">All</label>
     </div>
@@ -94,7 +99,8 @@ export default {
       image_c: false,
       video_c: false,
       audio_c: false,
-      pdf_c: false
+      pdf_c: false,
+      and_c: true
     }
   },
   computed: {
@@ -201,15 +207,25 @@ export default {
 
       if(this.tag_search){
         let valid_names = []
-        this.tag_list.forEach(tag => {
-          if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
-          // if(tag.tag.includes(this.tag_search)){
-            const tag_files = tag.files.map(f => f.filename);
-            valid_names.push(...tag_files)
-          }
-        });
+        if(this.and_c){
+          this.tag_list.forEach(tag => {
+            if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
+              const tag_files = tag.files.map(f => f.filename);
+              valid_names.push(tag_files)
+            }
+          });
 
-        this.filter_condition = file => valid_names.includes(file.name);
+          this.filter_condition = file => valid_names.every(f_list => f_list.includes(file.name));
+        } else {
+          this.tag_list.forEach(tag => {
+            if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
+              const tag_files = tag.files.map(f => f.filename);
+              valid_names.push(...tag_files)
+            }
+          });
+
+          this.filter_condition = file => valid_names.includes(file.name);
+        }
       } else {
         this.filter_condition = null;
       }
@@ -233,6 +249,11 @@ export default {
         }
       },
       deep: false
+    },
+    and_c(){
+      if(this.tag_search){
+        this.search_by_tag();
+      }
     }
   }
 }

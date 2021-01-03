@@ -5,7 +5,7 @@
         <div class="modal-container">
 
           <div class="modal-header">
-            <h3>{{panel_obj.name}}</h3> <button @click="$emit('close')">X</button>
+            <h3>{{panel_obj.name}}</h3> <button @click="$emit('close')"> X </button>
           </div>
 
           <loading :active="isLoading" :can-cancel="false" id="modal_loader"></loading>
@@ -29,9 +29,9 @@
           </div>
 
           <div class="modal-footer">
-            Tag list
-            <input id="input_tag" :placeholder="file_tags" v-model="tag_list">
-            <button @click="addTag">Save</button>
+            <b class="modal-left">Tag list: </b>
+            <input class="modal-left" id="input_tag" placeholder="Tag List" v-model="tag_list">
+            <button class="modal-default-button" @click="save_tags">Save</button>
             <button class="modal-default-button" @click="$emit('close')">
               Close
             </button>
@@ -67,16 +67,6 @@ const pdf_ext = ["pdf", "PDF"];
 export default {
   name: "Modal",
   watch: {
-    // _panel_obj: {
-    //   handler(val){
-    //     console.log("Whatcher");
-    //     console.log(val);
-    //   },
-    //   deep:true,
-    //   immediate: true,
-
-    // }
-    // ,
     _panel_obj_name: {
       handler(){
         console.log("Whatcher");
@@ -93,6 +83,7 @@ export default {
             this.isLoading = false;
           });
         }
+        this.tag_list = this.file_tags_txt;
       },
       deep:true,
       immediate: true,
@@ -124,6 +115,9 @@ export default {
     file2tags: function () {
       return this.$store.state.file2tags;
     },
+    file_tags(){
+      return this.file2tags[this.panel_obj.name];
+    },
     file_ext(){
       return this.panel_obj.name.split('.').pop();
     },
@@ -139,10 +133,10 @@ export default {
         return 'img';
       }
     },
-    file_tags(){
+    file_tags_txt(){
       var tags = '';
-      if(this.panel_obj.name in this.file2tags){
-        this.file2tags[this.panel_obj.name].forEach(t => {
+      if(this.file_tags){
+        this.file_tags.forEach(t => {
           tags = tags + t + " ";
         });
       }
@@ -150,26 +144,50 @@ export default {
     }
   },
   methods: {
-    addTag(){
-      //add the tag to the datbase tag_list
-      let tag_list_ref = firebase.database().ref("/tag_list");
-      tag_list_ref.child(filename_2_firekey(this.tag_list)).set({
-        tag_name: this.tag_list
+    save_tags(){
+      var add_tags = [];
+      var remove_tags = [];
+
+      var t_l = [];
+      if(this.tag_list){
+        t_l = this.tag_list.split(" ");
+      }
+
+      var f_t = [];
+      if(this.file_tags){
+        f_t = this.file_tags;
+      }
+
+      f_t.forEach(t => {
+        if(!t_l.includes(t)){
+          remove_tags.push(t);
+        }
+      });
+
+      t_l.forEach(t => {
+        if(!f_t.includes(t)){
+          add_tags.push(t);
+        }
       });
 
       //tagging_db is pointing to the path /tagging_db in DB
       let tagging_db = firebase.database().ref("/tagging_db");
 
-      //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
-      var tagref = tagging_db.child(this.tag_list).child(filename_2_firekey(this.panel_obj.name));
-      //Setting data to that path
-      tagref.set({
-        filename: this.panel_obj.name,
-        size: this.panel_obj.size
+      add_tags.forEach(t => {
+        //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
+        var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj.name));
+        //Setting data to that path
+        tagref.set({
+          filename: this.panel_obj.name,
+          size: this.panel_obj.size
+        });
       });
-      console.log('Added '+ this.panel_obj.name + ' to tag ' + this.tag_list)
 
-      this.tag_list = ''
+      remove_tags.forEach(t => {
+        //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
+        var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj.name));
+        tagref.remove();
+      });
     }
   }
 };
@@ -221,14 +239,27 @@ export default {
 }
 
 .modal-body {
+  display: block;
+  width: 100%;
+}
+
+.modal-footer {
   margin: 20px 0;
 }
 
 .modal-default-button {
   display: block;
-  margin-top: 1rem;
+  float: right;
 }
 
+.modal-left {
+  display: block;
+  float: left;
+}
+
+#input_tag {
+  width: 70%;
+}
 /*
  * The following styles are auto-applied to elements with
  * transition="modal" when their visibility is toggled
