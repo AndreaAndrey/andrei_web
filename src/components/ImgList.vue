@@ -284,7 +284,7 @@ div.gallery {
   border: 1px solid #ccc;
   float: left;
   width: 250px;
-  height: 320px;
+  height: 400px;
 }
 
 div.gallery:hover {
