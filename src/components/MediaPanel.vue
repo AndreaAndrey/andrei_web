@@ -5,7 +5,7 @@
         <div class="modal-container">
 
           <div class="modal-header">
-            <h3>{{panel_obj.name}}</h3>
+            <h3>{{panel_obj.name}}</h3> <button @click="$emit('close')">X</button>
           </div>
 
           <loading :active="isLoading" :can-cancel="false" id="modal_loader"></loading>
@@ -22,6 +22,10 @@
               <source :src="'data:audio/ogg;base64,'+media_data" type="audio/mpeg">
             Your browser does not support the audio element.
             </audio>
+
+            <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" :src="'data:application/pdf;base64,'+media_data"></pdf> -->
+            <pdf class="media_tag" v-if="file_type == 'pdf'" :src="window.atob(media_data)"></pdf>
+            <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" src="https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/pdf_open_parameters.pdf"></pdf> -->
           </div>
 
           <div class="modal-footer">
@@ -41,6 +45,7 @@
 <script>
 import Loading from 'vue3-loading-overlay';
 import firebase from '@/firebaseinit.js';
+import pdf from 'pdfvuer';
 
 //to be moved where it belongs
 function filename_2_firekey (filename) {
@@ -53,6 +58,11 @@ function filename_2_firekey (filename) {
 
 //     return decoded;
 // }
+
+// const img_ext = ["jpg", "JPG", "jpeg", "gif", "PNG", "png"];
+const vid_ext = ["mp4"];
+const aud_ext = ["m4a", "acc", "mp3"];
+const pdf_ext = ["pdf", "PDF"];
 
 export default {
   name: "Modal",
@@ -80,7 +90,6 @@ export default {
               this.media_data = '';
             }
             this.media_data = data.toString("base64");
-            console.log(this.media_data);
             this.isLoading = false;
           });
         }
@@ -100,7 +109,8 @@ export default {
     };
   },
   components: {
-    Loading
+    Loading,
+    pdf
   },
   computed: {
     _panel_obj(){
@@ -119,11 +129,11 @@ export default {
     },
     file_type(){
       let extension = this.file_ext;
-      if(extension == 'm4a' || extension == 'acc'|| extension == 'mp3'){
+      if(aud_ext.includes(extension)){
         return 'audio';
-      } else if(extension == 'mp4'){
+      } else if(vid_ext.includes(extension)){
         return 'video';
-      } else if(extension == 'pdf'){
+      } else if(pdf_ext.includes(extension)){
         return 'pdf';
       } else {
         return 'img';
@@ -167,8 +177,8 @@ export default {
 
 <style scoped>
 .media_tag {
-  max-width:80%;
-  max-height:80%;
+  max-width: calc(100vw - 50px);
+  max-height: calc(70vh - 50px);
   /* height:auto !important; */
   object-fit: contain;
 }
