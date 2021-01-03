@@ -7,7 +7,7 @@
           {{tag.tag}}
         </span>
     </div>
-    <p>Search by <b>tag</b>: <input v-model="tag_search" placeholder="edit me" @keyup.enter="search_by_tag"> <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button></p>
+    <p>Search by <b>tag</b>: <input v-model="tag_search" placeholder="edit me" @keyup.enter="search_by_tag" :disabled="untagged"> <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button></p>
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="checkbox" id="and_c" value="and" v-model="and_c">
       <label class="form-check-label" for="and_c">AND/OR (active -> AND)</label>
@@ -33,6 +33,9 @@
       <input class="form-check-input" type="checkbox" id="pdf_c" value="pdf" v-model="pdf_c" :disabled="all_c">
       <label class="form-check-label" for="pdf_c">PDF</label>
     </div>
+    <br>
+    <button @click="show_untagged">Show Untagged</button>
+    <button v-if="untagged" @click="show_all"> X </button>
   </div>
 
   <div style="width: 100%;"><hr></div>
@@ -100,7 +103,8 @@ export default {
       video_c: false,
       audio_c: false,
       pdf_c: false,
-      and_c: true
+      and_c: true,
+      untagged: false
     }
   },
   computed: {
@@ -158,7 +162,8 @@ export default {
     this.$store.dispatch('getTags');
 
     await this.$store.dispatch('getFiles');
-    // this.page_changed(); // No need because of the watcher
+    this.isLoading = true;
+    // this.page_changed();
   },
   methods: {
     go_to(){
@@ -203,33 +208,36 @@ export default {
       this.showModal = true;
     },
     search_by_tag(){
-      this.page = 1; // reset page to the first
+      if(!this.untagged){
+        this.page = 1; // reset page to the first
 
-      if(this.tag_search){
-        let valid_names = []
-        if(this.and_c){
-          this.tag_list.forEach(tag => {
-            if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
-              const tag_files = tag.files.map(f => f.filename);
-              valid_names.push(tag_files)
+        if(this.tag_search){
+          let valid_names = []
+          if(this.and_c){
+            this.tag_list.forEach(tag => {
+              if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
+                const tag_files = tag.files.map(f => f.filename);
+                valid_names.push(tag_files);
+              }
+            });
+            if(valid_names.length == 0){
+              valid_names = [[]];
             }
-          });
+            this.filter_condition = file => valid_names.every(f_list => f_list.includes(file.name));
+          } else {
+            this.tag_list.forEach(tag => {
+              if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
+                const tag_files = tag.files.map(f => f.filename);
+                valid_names.push(...tag_files);
+              }
+            });
 
-          this.filter_condition = file => valid_names.every(f_list => f_list.includes(file.name));
+            this.filter_condition = file => valid_names.includes(file.name);
+          }
         } else {
-          this.tag_list.forEach(tag => {
-            if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
-              const tag_files = tag.files.map(f => f.filename);
-              valid_names.push(...tag_files)
-            }
-          });
-
-          this.filter_condition = file => valid_names.includes(file.name);
+          this.filter_condition = null;
         }
-      } else {
-        this.filter_condition = null;
       }
-      this.page_changed();
     },
     add_tag_search(tag_){
       this.tag_search = tag_;
@@ -238,17 +246,28 @@ export default {
     delete_search(){
       this.tag_search = "";
       this.search_by_tag();
+    },
+    show_untagged(){
+      this.untagged = true;
+      this.page = 1;
+      this.filter_condition = file => !(file.name in this.file2tags);
+      // this.page_changed(); // No need because there is a watcher on the file list, and file list changes when I change filter_condition
+    },
+    show_all(){
+      this.untagged = false;
+      this.search_by_tag();
     }
   },
   watch: {
     file_list: {
       handler(n, o){
         console.log("Watch file_list");
-        if(n.length != o.length){
-          this.search_by_tag();
+        if(!o && n || n.length != o.length){
+          this.page_changed();
         }
       },
-      deep: false
+      deep: false,
+      immediate: true
     },
     and_c(){
       if(this.tag_search){

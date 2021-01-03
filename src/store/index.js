@@ -85,7 +85,6 @@ export default createStore({
             returnArr.sort((a, b) => {return b.files.length - a.files.length});
             commit("setTagList", returnArr);
             commit("set_file2tags", file2tags);
-            console.log(file2tags);
         });
       }
     }

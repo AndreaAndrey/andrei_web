@@ -150,7 +150,7 @@ export default {
 
       var t_l = [];
       if(this.tag_list){
-        t_l = this.tag_list.split(" ");
+        t_l = this.tag_list.split(" ").map(t => t.toLowerCase());
       }
 
       var f_t = [];
@@ -170,24 +170,35 @@ export default {
         }
       });
 
+      console.log({
+        add: add_tags,
+        remove: remove_tags
+      });
+
       //tagging_db is pointing to the path /tagging_db in DB
       let tagging_db = firebase.database().ref("/tagging_db");
 
       add_tags.forEach(t => {
-        //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
-        var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj.name));
-        //Setting data to that path
-        tagref.set({
-          filename: this.panel_obj.name,
-          size: this.panel_obj.size
-        });
+        if(t){
+          //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
+          var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj.name));
+          //Setting data to that path
+          tagref.set({
+            filename: this.panel_obj.name,
+            size: this.panel_obj.size
+          });
+        }
       });
 
       remove_tags.forEach(t => {
-        //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
-        var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj.name));
-        tagref.remove();
+        if(t){
+          //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
+          var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj.name));
+          tagref.remove();
+        }
       });
+
+      this.tag_list = this.file_tags_txt;
     }
   }
 };
