@@ -24,8 +24,8 @@
             </audio>
 
             <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" :src="'data:application/pdf;base64,'+media_data"></pdf> -->
-            <pdf class="media_tag" v-if="file_type == 'pdf'" :src="window.atob(media_data)"></pdf>
-            <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" src="https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/pdf_open_parameters.pdf"></pdf> -->
+<!--             <pdf class="media_tag" v-if="file_type == 'pdf'" :src="'data:application/pdf;base64,'+media_data"></pdf>
+ -->            <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" src="https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/pdf_open_parameters.pdf"></pdf> -->
           </div>
 
           <div class="modal-footer">
@@ -45,8 +45,15 @@
 <script>
 import Loading from 'vue3-loading-overlay';
 import firebase from '@/firebaseinit.js';
-import pdf from 'pdfvuer';
+//import pdf from 'pdfvuer';
 
+/**
+ * Display a base64 URL inside an iframe in another window.
+ */
+function debugBase64(base64URL){
+    var win = window.open();
+    win.document.write('<iframe src="' + base64URL  + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+}
 //to be moved where it belongs
 function filename_2_firekey (filename) {
   const encoded = window.btoa(filename)
@@ -81,6 +88,9 @@ export default {
             }
             this.media_data = data.toString("base64");
             this.isLoading = false;
+            if(pdf_ext.includes(this.file_type)){
+              debugBase64('data:application/pdf;base64,'+this.media_data);
+            }
           });
         }
         this.tag_list = this.file_tags_txt;
@@ -100,8 +110,8 @@ export default {
     };
   },
   components: {
-    Loading,
-    pdf
+    Loading
+    //,pdf
   },
   computed: {
     _panel_obj(){
