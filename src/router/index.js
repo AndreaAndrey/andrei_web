@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import About from '../views/About.vue'
+import Tags from '../views/Tags.vue'
 import Instructions from '../views/Instructions.vue'
 import Login from '../views/Login.vue'
 import firebase from '@/firebaseinit.js'
@@ -23,6 +24,14 @@ const routes = [
     path: '/instructions',
     name: 'Instructions',
     component: Instructions,
+    meta: {
+      requiresAuth: true
+    },
+  },
+  {
+    path: '/tags',
+    name: 'Tags',
+    component: Tags,
     meta: {
       requiresAuth: true
     },
