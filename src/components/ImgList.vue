@@ -55,6 +55,13 @@
     <div class="desc">{{ img.name }}</div>
     <div class="desc">Tags: <span class="tag" v-for="t in file2tags[img.name]" :key="t + img.name">{{t}}</span></div>
   </div>
+
+  <h1 v-if="images.length == 0 && !isLoading">No Files</h1>
+
+  <div style="width: 100%"><hr></div>
+  <div style="display:inline-block; margin: auto;">
+    <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
+  </div>
 </template>
 
 <script>
@@ -78,6 +85,14 @@ let download_file = async (file) => {
     }
   );
 };
+
+// const stringHashCode = str => {
+//   let hash = 0
+//   for (let i = 0; i < str.length; ++i)
+//     hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0
+
+//   return hash
+// }
 
 const img_ext = ["jpg", "JPG", "jpeg", "gif", "PNG", "png"];
 const vid_ext = ["mp4"];
@@ -214,16 +229,23 @@ export default {
         if(this.tag_search){
           let valid_names = []
           if(this.and_c){
-            this.tag_list.forEach(tag => {
-              if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
-                const tag_files = tag.files.map(f => f.filename);
-                valid_names.push(tag_files);
-              }
+            console.log(this.tag_search.split(" "));
+            this.tag_search.split(" ").forEach(t_s => {
+              var t_names = [];
+              this.tag_list.forEach(tag => {
+                if(tag.tag.includes(t_s)){
+                  const tag_files = tag.files.map(f => f.filename);
+                  t_names.push(...tag_files);
+                }
+              });
+              valid_names.push(t_names);
             });
+            console.log(valid_names);
             if(valid_names.length == 0){
               valid_names = [[]];
             }
             this.filter_condition = file => valid_names.every(f_list => f_list.includes(file.name));
+            console.log(this.filter_condition);
           } else {
             this.tag_list.forEach(tag => {
               if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
@@ -262,7 +284,7 @@ export default {
     file_list: {
       handler(n, o){
         console.log("Watch file_list");
-        if(!o && n || n.length != o.length){
+        if(o != undefined && (n.length != o.length || n.length == 0 || n[0].name != o[0].name)){
           this.page_changed();
         }
       },

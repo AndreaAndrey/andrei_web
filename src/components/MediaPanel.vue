@@ -23,14 +23,16 @@
             Your browser does not support the audio element.
             </audio>
 
+            <h5 v-if="file_type == 'pdf'">Open Popup window</h5>
+
             <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" :src="'data:application/pdf;base64,'+media_data"></pdf> -->
-<!--             <pdf class="media_tag" v-if="file_type == 'pdf'" :src="'data:application/pdf;base64,'+media_data"></pdf>
- -->            <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" src="https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/pdf_open_parameters.pdf"></pdf> -->
+            <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" :src="'data:application/pdf;base64,'+media_data"></pdf> -->
+            <!-- <pdf class="media_tag" v-if="file_type == 'pdf'" src="https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/pdf_open_parameters.pdf"></pdf> -->
           </div>
 
           <div class="modal-footer">
             <b class="modal-left">Tag list: </b>
-            <input class="modal-left" id="input_tag" placeholder="Tag List" v-model="tag_list">
+            <input class="modal-left" id="input_tag" placeholder="Tag List" v-model="tag_list" @keyup.enter="save_tags">
             <button class="modal-default-button" @click="save_tags">Save</button>
             <button class="modal-default-button" @click="$emit('close')">
               Close
@@ -46,6 +48,7 @@
 import Loading from 'vue3-loading-overlay';
 import firebase from '@/firebaseinit.js';
 //import pdf from 'pdfvuer';
+//import pdf from 'vue-pdf';
 
 /**
  * Display a base64 URL inside an iframe in another window.
@@ -78,7 +81,6 @@ export default {
       handler(){
         console.log("Whatcher");
         var copied_panel = Object.assign({}, this.panel_obj);
-        //console.log('Prop changed: ', n, ' | was: ', o);
         if(this.file_type != 'img'){
           this.isLoading = true;
           console.log("W Video");
