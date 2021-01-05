@@ -7,7 +7,11 @@
           {{tag.tag}}
         </span>
     </div>
-    <p>Search by <b>tag</b>: <input v-model="tag_search" placeholder="edit me" @keyup.enter="search_by_tag" :disabled="untagged"> <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button></p>
+    <p>Search by <b>tag</b>:
+      <input v-model="tag_search" placeholder="edit me" :disabled="untagged"
+            @keyup.enter="search_by_tag" @focus="text_on = true" @blur="text_on = false">
+      <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button>
+    </p>
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="checkbox" id="and_c" value="and" v-model="and_c">
       <label class="form-check-label" for="and_c">AND/OR (active -> AND)</label>
@@ -41,7 +45,11 @@
   <div style="width: 100%;"><hr></div>
 
   <div style="display:inline-block; margin: auto;">
-    <p>Select <b>page number</b>: <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1" @keyup.enter="go_to"> <button @click="go_to">Go</button> </p>
+    <p>Select <b>page number</b>:
+      <input id="page_num" v-model.number="page_select" type="number" min="1" placeholder="1"
+            @keyup.enter="go_to" @focus="text_on = true" @blur="text_on = false">
+      <button @click="go_to">Go</button>
+    </p>
     <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
   </div>
   <div style="width: 100%"><hr></div>
@@ -62,6 +70,9 @@
   <div style="display:inline-block; margin: auto;">
     <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
   </div>
+
+  <Keypress key-event="keyup" :key-code="39" :preventDefault="true" @success="next_page" />
+  <Keypress key-event="keyup" :key-code="37" :preventDefault="true" @success="prev_page" />
 </template>
 
 <script>
@@ -73,6 +84,8 @@ import Pagination from 'v-pagination-3';
 import Modal from './MediaPanel';
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
+
+import { defineAsyncComponent } from 'vue';
 
 // Transform callback based method into proper async function with Promises
 let download_file = async (file) => {
@@ -119,7 +132,8 @@ export default {
       audio_c: false,
       pdf_c: false,
       and_c: true,
-      untagged: false
+      untagged: false,
+      text_on: false
     }
   },
   computed: {
@@ -151,6 +165,9 @@ export default {
       }
       return this.$store.getters.get_list(total_filter);
     },
+    max_page: function () {
+      return Math.ceil(this.total_files / this.per_page);
+    },
     tag_list: function () {
       return this.$store.state.tag_list;
     },
@@ -170,7 +187,8 @@ export default {
   components: {
     Loading,
     Pagination,
-    Modal
+    Modal,
+    Keypress: defineAsyncComponent(() => import('vue3-keypress'))
   },
   async mounted() {
     // Not awaiting this as this is continuously run to get push updates from DB
@@ -184,6 +202,9 @@ export default {
     go_to(){
       if(this.page_select < 1){
         return;
+      }
+      if(this.page_select > this.max_page){
+        this.page_select = this.max_page
       }
       this.page = this.page_select;
     },
@@ -278,6 +299,24 @@ export default {
     show_all(){
       this.untagged = false;
       this.search_by_tag();
+    },
+    next_page(){
+      if(!this.text_on && !this.showModal){
+        var next = this.page + 1;
+        if(next > this.max_page){
+          this.page = this.max_page;
+        } else {
+          this.page = next;
+        }
+      }
+    },
+    prev_page(){
+      if(!this.text_on && !this.showModal){
+        var next = this.page - 1;
+        if(next >= 1){
+          this.page = next;
+        }
+      }
     }
   },
   watch: {

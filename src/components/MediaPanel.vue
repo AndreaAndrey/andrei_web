@@ -1,4 +1,7 @@
 <template>
+  <Keypress key-event="keyup" :key-code="27" :preventDefault="true" @success="$emit('close')" /> <!-- If esc is pressed close the modal -->
+  <Keypress key-event="keyup" :key-code="9" :preventDefault="true" @success="$emit('close')" /> <!-- If tab is pressed close the modal -->
+  <!-- <Keypress key-event="keyup" :key-code="88" :preventDefault="true" @success="$emit('close')" /> If X is pressed close the modal -->
   <transition name="modal">
     <div class="modal-mask">
       <div class="modal-wrapper">
@@ -47,6 +50,7 @@
 <script>
 import Loading from 'vue3-loading-overlay';
 import firebase from '@/firebaseinit.js';
+import { defineAsyncComponent } from 'vue';
 //import pdf from 'pdfvuer';
 //import pdf from 'vue-pdf';
 
@@ -102,7 +106,7 @@ export default {
     }
   },
   props: {
-    panel_obj: Object,
+    panel_obj: Object
   },
   data() {
     return {
@@ -112,7 +116,8 @@ export default {
     };
   },
   components: {
-    Loading
+    Loading,
+    Keypress: defineAsyncComponent(() => import('vue3-keypress'))
     //,pdf
   },
   computed: {
