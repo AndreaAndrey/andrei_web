@@ -61,6 +61,7 @@
   <div class="gallery" v-for="img in images" :key="img.name">
     <img :src="img.media_data" @click="view_image(img)">
     <div class="desc">{{ img.name }}</div>
+    <button @click="add_elimina_tag(img)">elimina</button>
     <div class="desc">Tags: <span class="tag" v-for="t in file2tags[img.name]" :key="t + img.name">{{t}}</span></div>
   </div>
 
@@ -86,6 +87,13 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
 
 import { defineAsyncComponent } from 'vue';
+
+import firebase from '@/firebaseinit.js';
+
+function filename_2_firekey (filename) {
+  const encoded = window.btoa(filename)
+    return encoded;
+}
 
 // Transform callback based method into proper async function with Promises
 let download_file = async (file) => {
@@ -199,6 +207,20 @@ export default {
     // this.page_changed();
   },
   methods: {
+    add_elimina_tag(img){
+      let input_tag = 'elimina'
+
+      //tagging_db is pointing to the path /tagging_db in DB
+      let tagging_db = firebase.database().ref("/tagging_db");
+      var tagref = tagging_db.child(input_tag).child(filename_2_firekey(img.name));
+      //Setting data to that path
+      tagref.set({
+        filename: img.name,
+        size: img.size
+      });
+      console.log('Added '+ img.name + ' to tag ' + input_tag)
+
+    },
     go_to(){
       if(this.page_select < 1){
         return;
