@@ -35,7 +35,7 @@
 
           <div class="modal-footer">
             <b class="modal-left">Tag list: </b>
-            <input class="modal-left" id="input_tag" placeholder="Tag List" v-model="tag_list" @keyup.enter="save_tags">
+            <input ref="input_tag_label" class="modal-left" id="input_tag" placeholder="Tag List" v-model="tag_list" @keyup.enter="save_tags">
             <button class="modal-default-button" @click="save_tags">Save</button>
             <button class="modal-default-button" @click="$emit('close')">
               Close
@@ -114,6 +114,9 @@ export default {
       isLoading: false,
       tag_list: ''
     };
+  },
+  mounted(){
+    this.$refs.input_tag_label.focus();
   },
   components: {
     Loading,
