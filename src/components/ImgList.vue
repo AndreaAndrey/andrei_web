@@ -204,7 +204,7 @@ export default {
 
     await this.$store.dispatch('getFiles');
     this.isLoading = true;
-    // this.page_changed();
+    this.page_changed();
   },
   methods: {
     add_elimina_tag(img){
@@ -350,7 +350,7 @@ export default {
         }
       },
       deep: false,
-      immediate: true
+      immediate: false
     },
     and_c(){
       if(this.tag_search){
