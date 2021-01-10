@@ -8,8 +8,8 @@
         </span>
     </div>
     <p>Search by <b>tag</b>:
-      <input v-model="tag_search" placeholder="edit me" :disabled="untagged"
-            @keyup.enter="search_by_tag" @focus="text_on = true" @blur="text_on = false">
+      <input v-model="tag_search" placeholder="Search tags, use '' for exact, use - to exclude." :disabled="untagged"
+            @keyup.enter="search_by_tag" @focus="text_on = true" @blur="text_on = false" id="search_in">
       <button @click="search_by_tag">Search</button> <button v-if="tag_search" @click="delete_search">X</button>
     </p>
     <div class="form-check form-check-inline">
@@ -270,34 +270,81 @@ export default {
         this.page = 1; // reset page to the first
 
         if(this.tag_search){
-          let valid_names = []
+          this.tag_search = this.tag_search.toLowerCase();
+          const exact_regex = /"\w+"|'\w+'/g; // regex to understand if it is an exact search: "tag"
+          let valid_names = [];
+          let remove_names = [];
           if(this.and_c){
-            console.log(this.tag_search.split(" "));
             this.tag_search.split(" ").forEach(t_s => {
               var t_names = [];
-              this.tag_list.forEach(tag => {
-                if(tag.tag.includes(t_s)){
-                  const tag_files = tag.files.map(f => f.filename);
-                  t_names.push(...tag_files);
-                }
-              });
-              valid_names.push(t_names);
+              var remove_tag = false;
+              if(t_s.charAt(0) === "-" || ((t_s.charAt(0) === "'" || t_s.charAt(0) === "\"") && t_s.charAt(1) === "-")){ // if remove tag search
+                t_s = t_s.replace("-", "");
+                remove_tag = true;
+              }
+              if(t_s.match(exact_regex)){ // if exact search
+                t_s = t_s.replaceAll("'", "").replaceAll("\"", "");
+                this.tag_list.forEach(tag => {
+                  if(tag.tag === t_s){
+                    const tag_files = tag.files.map(f => f.filename);
+                    t_names.push(...tag_files);
+                  }
+                });
+              } else { // if fuzzy search
+                this.tag_list.forEach(tag => {
+                  if(tag.tag.includes(t_s)){
+                    const tag_files = tag.files.map(f => f.filename);
+                    t_names.push(...tag_files);
+                  }
+                });
+              }
+              if(remove_tag){
+                remove_names.push(...t_names);
+              } else {
+                valid_names.push(t_names);
+              }
             });
-            console.log(valid_names);
             if(valid_names.length == 0){
               valid_names = [[]];
             }
-            this.filter_condition = file => valid_names.every(f_list => f_list.includes(file.name));
-            console.log(this.filter_condition);
+            this.filter_condition = file => valid_names.every(f_list => f_list.includes(file.name)) && !remove_names.includes(file.name);
           } else {
             this.tag_list.forEach(tag => {
-              if(this.tag_search.split(" ").some(t => tag.tag.includes(t))){
+              if(this.tag_search.split(" ").some(t => {
+                  if(t.charAt(0) === "-" || ((t.charAt(0) === "'" || t.charAt(0) === "\"") && t.charAt(1) === "-")){ // if remove tag search
+                    return false;
+                  }
+                  if(t.match(exact_regex)) { // if exact search
+                    t = t.replaceAll("'", "").replaceAll("\"", "");
+                    return tag.tag === t;
+                  } else { // if fuzzy search
+                    return tag.tag.includes(t);
+                  }
+                }))
+              {
                 const tag_files = tag.files.map(f => f.filename);
                 valid_names.push(...tag_files);
               }
+              if(this.tag_search.split(" ").some(t => {
+                  if(t.charAt(0) === "-" || ((t.charAt(0) === "'" || t.charAt(0) === "\"") && t.charAt(1) === "-")){ // if remove tag search
+                    t.replace("-", "");
+                    if(t.match(exact_regex)) { // if exact search
+                      t = t.replaceAll("'", "").replaceAll("\"", "");
+                      return tag.tag === t;
+                    } else { // if fuzzy search
+                      return tag.tag.includes(t);
+                    }
+                  } else {
+                    return false;
+                  }
+                }))
+              {
+                const tag_files = tag.files.map(f => f.filename);
+                remove_names.push(...tag_files);
+              }
             });
 
-            this.filter_condition = file => valid_names.includes(file.name);
+            this.filter_condition = file => valid_names.includes(file.name) && !remove_names.includes(file.name);
           }
         } else {
           this.filter_condition = null;
@@ -405,5 +452,10 @@ div.desc {
 .active_tag {
   background-color: rgb(48, 145, 241) !important;
   font-weight: bold;
+}
+
+#search_in {
+  width: 450px;
+  text-align: center;
 }
 </style>

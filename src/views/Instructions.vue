@@ -7,7 +7,10 @@
         <li>Per ricercare immagini taggate si può usare:
             <ol>
                 <li>Common Tags: cliccare su uno dei tag piu comuni per visualizzare i multimedia associati a quel tag.</li>
-                <li>Usare l'apposito campo per scrivere e cercare uno o piu tag separati da uno <b>spazio</b> " ". In modalità AND si trovano le immagini che contengono tutti i tag, con OR invece le immagini che contengono almeno uno dei tag.</li>
+                <li>Usare l'apposito campo per scrivere e cercare uno o piu tag separati da uno <b>spazio</b> " ".</li>
+                <li>In modalità <b>AND</b> si trovano le immagini che contengono <b>tutti</b> i tag, con <b>OR</b> invece le immagini che contengono <b>almeno uno</b> dei tag. </li>
+                <li>Se si usano le <b>virgolette</b> 'ricerca' o "ricerca" la ricerca trova solo i tag che corrispondono <b>esattamente</b> alla ricerca, altrimenti trova anche tag che hanno una sottostringa che matcha la ricerca. </li>
+                <li>Utilizzando invece il simbolo "-" davanti ai tag ricercati si possono <b>escludere</b> dalla ricerca: es. la ricerca "soci -brescia" trova tutte le immagini contenenti il soci ma non il brescia. </li>
             </ol>
         </li>
         <li>Si può poi filtrare i risultati per tipologia di file con gli appositi checkboxes.</li>
