@@ -15,11 +15,17 @@
         <li>Cliccando su uno dei media si aprirà una finestra modale in cui è possibile visualizzare il media e aggiungere/rimuovere tags modificando l'apposito input (esprimere i tag come una lista di parole, lo spazio " " è un separatore di tag). Per chiudere la finestra modale usare i bottoni "X" o "Chiudi" oppure premere "ESC" o "TAB".</li>
     </ol>
   </div>
+  <BackToTop />
 </template>
 
 <script>
+import BackToTop from '@/components/BackToTop.vue';
+
 export default {
   name: 'Instructions',
+  components: {
+    BackToTop
+  }
 }
 </script>
 

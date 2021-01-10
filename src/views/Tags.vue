@@ -28,12 +28,14 @@
       </tbody>
     </table>
   </div>
+  <BackToTop />
 </template>
 
 <script>
-import "bootstrap/dist/css/bootstrap.min.css"
-import "bootstrap-vue/dist/bootstrap-vue.css"
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-vue/dist/bootstrap-vue.css";
 import Loading from 'vue3-loading-overlay';
+import BackToTop from '@/components/BackToTop.vue';
 
 export default {
   name: 'Tags',
@@ -71,7 +73,8 @@ export default {
     }
   },
   components: {
-    Loading
+    Loading,
+    BackToTop
   }
 }
 </script>

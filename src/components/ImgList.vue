@@ -117,7 +117,7 @@ let download_file = async (file) => {
 
 const img_ext = ["jpg", "JPG", "jpeg", "gif", "PNG", "png"];
 const vid_ext = ["mp4"];
-const aud_ext = ["m4a", "acc", "mp3"];
+const aud_ext = ["m4a", "acc", "mp3", "aac"];
 const pdf_ext = ["pdf", "PDF"];
 
 export default {
