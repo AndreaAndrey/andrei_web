@@ -68,9 +68,13 @@
   <h1 v-if="images.length == 0 && !isLoading">No Files</h1>
 
   <div style="width: 100%"><hr></div>
-  <div style="display:inline-block; margin: auto;">
-    <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
-  </div>
+<!--   <div>
+    <div class="footer">
+      <span style="display:inline-block; margin: auto;">
+        <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
+      </span>
+    </div> 
+  </div> -->
 
   <Keypress key-event="keyup" :key-code="39" :preventDefault="true" @success="next_page" />
   <Keypress key-event="keyup" :key-code="37" :preventDefault="true" @success="prev_page" />
@@ -352,6 +356,7 @@ export default {
       }
     },
     add_tag_search(tag_){
+      this.untagged = false;
       this.tag_search = tag_;
       this.search_by_tag();
     },
@@ -415,6 +420,7 @@ div.gallery {
   float: left;
   width: 250px;
   height: 400px;
+  overflow: hidden;
 }
 
 div.gallery:hover {
@@ -428,11 +434,17 @@ div.gallery img {
   max-height:250px;
   /* height:auto !important; */
   object-fit: contain;
+
 }
 
 div.desc {
   padding: 15px;
   text-align: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex-flow: row wrap;
+  overflow: hidden;
 }
 
 .tag-list{
@@ -447,6 +459,7 @@ div.desc {
   border-radius:5px;
   background-color: #9bd;
   color: #ffff;
+
 }
 
 .active_tag {
@@ -457,5 +470,16 @@ div.desc {
 #search_in {
   width: 450px;
   text-align: center;
+}
+
+.footer {
+   position: relative;
+   left: 0;
+   bottom: 0;
+   width: 100%;
+   text-align: center;
+}
+.footer_child {
+   margin: 0 auto;
 }
 </style>
