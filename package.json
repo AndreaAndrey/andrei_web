@@ -12,6 +12,7 @@
     "bootstrap-vue": "^2.21.1",
     "core-js": "^3.6.5",
     "firebase": "^8.2.1",
+    "lru-cache": "^6.0.0",
     "megajs": "^0.17.2",
     "sjcl": "^1.0.8",
     "v-pagination-3": "^0.1.2",

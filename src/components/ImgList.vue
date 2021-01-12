@@ -73,7 +73,7 @@
       <span style="display:inline-block; margin: auto;">
         <pagination v-model="page" :records="total_files" :per-page="per_page" @paginate="page_changed"/>
       </span>
-    </div> 
+    </div>
   </div> -->
 
   <Keypress key-event="keyup" :key-code="39" :preventDefault="true" @success="next_page" />
@@ -149,6 +149,9 @@ export default {
     }
   },
   computed: {
+    cache: function () {
+      return this.$store.state.cache;
+    },
     total_files: function () {
       return this.file_list.length;
     },
@@ -254,8 +257,12 @@ export default {
           } else if(pdf_ext.includes(extension)){
             media_data = this.pdf_icon;
           } else {
-            media_data = await download_file(x);
-            media_data = 'data:image/gif;base64,'+media_data;
+            media_data = this.cache.get(x.name);
+            if(!media_data){
+              media_data = await download_file(x);
+              this.cache.set(x.name, media_data);
+            }
+            media_data = 'data:image/gif;base64,' + media_data;
           }
           return {name : x.name, size : x.size, timestamp : x.timestamp, media_data : media_data, obj: x}
         })

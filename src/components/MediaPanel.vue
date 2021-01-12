@@ -73,6 +73,18 @@ function filename_2_firekey (filename) {
 //     return decoded;
 // }
 
+// Transform callback based method into proper async function with Promises
+let download_file = async (file) => {
+  return new Promise(
+    (resolve, reject) => {
+      file.download((err, data) => {
+        if (err) reject(err);
+        resolve(data.toString("base64"));
+      })
+    }
+  );
+};
+
 // const img_ext = ["jpg", "JPG", "jpeg", "gif", "PNG", "png"];
 const vid_ext = ["mp4"];
 const aud_ext = ["m4a", "acc", "mp3"];
@@ -82,22 +94,21 @@ export default {
   name: "Modal",
   watch: {
     _panel_obj_name: {
-      handler(){
+      async handler(){
         console.log("Whatcher");
         var copied_panel = Object.assign({}, this.panel_obj);
         if(this.file_type != 'img'){
           this.isLoading = true;
-          console.log("W Video");
-          copied_panel.obj.download((err, data) => {
-            if (err){
-              this.media_data = '';
-            }
-            this.media_data = data.toString("base64");
-            this.isLoading = false;
-            if(pdf_ext.includes(this.file_type)){
-              debugBase64('data:application/pdf;base64,'+this.media_data);
-            }
-          });
+          var media_data = this.cache.get(copied_panel.obj.name);
+          if(!media_data){
+            media_data = await download_file(copied_panel.obj);
+            this.cache.set(copied_panel.obj.name, media_data);
+          }
+          this.media_data = media_data;
+          this.isLoading = false;
+          if(pdf_ext.includes(this.file_type)){
+            debugBase64('data:application/pdf;base64,' + this.media_data);
+          }
         }
         this.tag_list = this.file_tags_txt;
       },
@@ -124,6 +135,9 @@ export default {
     //,pdf
   },
   computed: {
+    cache: function () {
+      return this.$store.state.cache;
+    },
     _panel_obj(){
       console.log('comp panel obj')
       return this.panel_obj;

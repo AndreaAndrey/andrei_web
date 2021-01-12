@@ -2,6 +2,11 @@ import { createStore } from 'vuex';
 import firebase from '@/firebaseinit.js';
 import { File } from '@/../node_modules/megajs/dist/main.browser-es.js';
 // import { File } from 'megajs';
+import LRU from 'lru-cache';
+
+const cache_options = { max: 500000000 // 500 MB
+  , length: function (n, key) { return n.length + key.length} // string length is in bytes
+  , maxAge: 1000 * 60 * 60 }
 
 const db = firebase.firestore();
 
@@ -23,7 +28,8 @@ export default createStore({
     folder_url: "", // remote MEGA URL
     tag_list: [], // list of tags where for each tag there is a list of files
     tag_loading: false, // if the DB remote connection is alive or not
-    file2tags: {} // dictionary where for each file, the value is the tags
+    file2tags: {}, // dictionary where for each file, the value is the tags
+    cache: new LRU(cache_options)
   },
   mutations: {
     setFolderUrl(state, url) {
