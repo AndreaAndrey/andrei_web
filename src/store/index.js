@@ -4,9 +4,11 @@ import { File } from '@/../node_modules/megajs/dist/main.browser-es.js';
 // import { File } from 'megajs';
 import LRU from 'lru-cache';
 
-const cache_options = { max: 100000000 // 100 MB
-  , length: function (n, key) { return n.length + key.length} // string length is in bytes
-  , maxAge: 1000 * 60 * 60 }
+const cache_options = {
+  max: 100000000, // 100 MB
+  length: function (n, key) { return n.length + key.length}, // string length is in bytes
+  maxAge: 1000 * 60 * 60 // 1h
+}
 
 const db = firebase.firestore();
 

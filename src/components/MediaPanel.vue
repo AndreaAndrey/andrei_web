@@ -1,28 +1,28 @@
 <template>
-  <Keypress key-event="keyup" :key-code="27" :preventDefault="true" @success="$emit('close')" /> <!-- If esc is pressed close the modal -->
-  <Keypress key-event="keyup" :key-code="9" :preventDefault="true" @success="$emit('close')" /> <!-- If tab is pressed close the modal -->
-  <!-- <Keypress key-event="keyup" :key-code="88" :preventDefault="true" @success="$emit('close')" /> If X is pressed close the modal -->
+  <Keypress key-event="keyup" :key-code="27" :preventDefault="true" @success="close_panel" /> <!-- If esc is pressed close the modal -->
+  <Keypress key-event="keyup" :key-code="9" :preventDefault="true" @success="close_panel" /> <!-- If tab is pressed close the modal -->
+  <!-- <Keypress key-event="keyup" :key-code="88" :preventDefault="true" @success="close_panel" /> If X is pressed close the modal -->
   <transition name="modal">
     <div class="modal-mask">
       <div class="modal-wrapper">
         <div class="modal-container">
 
           <div class="modal-header">
-            <h3>{{panel_obj.name}}</h3> <button @click="$emit('close')"> X </button>
+            <h3>{{panel_obj}}</h3> <button @click="close_panel"> X </button>
           </div>
 
           <loading :active="isLoading" :can-cancel="false" id="modal_loader"></loading>
 
           <div v-if="!isLoading" class="modal-body">
-            <img class="media_tag" v-if="file_type == 'img'" :src="panel_obj.media_data">
+            <img class="media_tag" v-if="file_type == 'img'" :src="'data:image/gif;base64,' + media_data">
 
             <video class="media_tag" v-if="file_type == 'video'" controls>
-              <source :src="'data:video/mp4;base64,'+media_data" type="video/mp4">
+              <source :src="'data:video/mp4;base64,'+ media_data" type="video/mp4">
             Your browser does not support the video tag.
             </video>
 
             <audio v-if="file_type == 'audio'" controls>
-              <source :src="'data:audio/ogg;base64,'+media_data" type="audio/mpeg">
+              <source :src="'data:audio/ogg;base64,'+ media_data" type="audio/mpeg">
             Your browser does not support the audio element.
             </audio>
 
@@ -37,7 +37,7 @@
             <b class="modal-left">Tag list: </b>
             <input ref="input_tag_label" class="modal-left" id="input_tag" placeholder="Tag List" v-model="tag_list" @keyup.enter="save_tags">
             <button class="modal-default-button" @click="save_tags">Save</button>
-            <button class="modal-default-button" @click="$emit('close')">
+            <button class="modal-default-button" @click="close_panel">
               Close
             </button>
           </div>
@@ -93,31 +93,34 @@ const pdf_ext = ["pdf", "PDF"];
 export default {
   name: "Modal",
   watch: {
-    _panel_obj_name: {
+    panel_obj: {
       async handler(){
         console.log("Whatcher");
-        var copied_panel = Object.assign({}, this.panel_obj);
-        if(this.file_type != 'img'){
-          this.isLoading = true;
-          var media_data = this.cache.get(copied_panel.obj.name);
+        console.log(this.panel_obj);
+        if(this.panel_obj){
+          var media_data = this.cache.get(this.panel_obj);
           if(!media_data){
-            media_data = await download_file(copied_panel.obj);
-            this.cache.set(copied_panel.obj.name, media_data);
+            this.isLoading = true;
+            let obj = this.file_obj;
+            media_data = await download_file(obj);
+            this.cache.set(this.panel_obj, media_data);
           }
           this.media_data = media_data;
           this.isLoading = false;
           if(pdf_ext.includes(this.file_type)){
             debugBase64('data:application/pdf;base64,' + this.media_data);
           }
+          this.tag_list = this.file_tags_txt;
+        } else {
+          this.tag_list = null;
+          this.media_data = null;
         }
-        this.tag_list = this.file_tags_txt;
       },
-      deep:true,
-      immediate: true,
+      immediate: true
     }
   },
   props: {
-    panel_obj: Object
+    panel_obj: String
   },
   data() {
     return {
@@ -138,22 +141,22 @@ export default {
     cache: function () {
       return this.$store.state.cache;
     },
-    _panel_obj(){
-      console.log('comp panel obj')
-      return this.panel_obj;
-    },
-    _panel_obj_name(){
-      return this.panel_obj.name;
-    }
-    ,
     file2tags: function () {
       return this.$store.state.file2tags;
     },
     file_tags(){
-      return this.file2tags[this.panel_obj.name];
+      if(this.panel_obj){
+        return this.file2tags[this.panel_obj];
+      } else {
+        return [];
+      }
     },
     file_ext(){
-      return this.panel_obj.name.split('.').pop();
+      if(this.panel_obj){
+        return this.panel_obj.split('.').pop();
+      } else {
+        return '-';
+      }
     },
     file_type(){
       let extension = this.file_ext;
@@ -175,9 +178,17 @@ export default {
         });
       }
       return tags;
+    },
+    file_obj(){
+      return this.$store.state.file_list.find(f => f.name === this.panel_obj);
     }
   },
   methods: {
+    close_panel(){
+      this.media_data = null;
+      this.tag_list = null;
+      this.$emit('close');
+    },
     save_tags(){
       var add_tags = [];
       var remove_tags = [];
@@ -215,11 +226,11 @@ export default {
       add_tags.forEach(t => {
         if(t){
           //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
-          var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj.name));
+          var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj));
           //Setting data to that path
           tagref.set({
-            filename: this.panel_obj.name,
-            size: this.panel_obj.size
+            filename: this.panel_obj,
+            size: this.file_obj.size
           });
         }
       });
@@ -227,7 +238,7 @@ export default {
       remove_tags.forEach(t => {
         if(t){
           //create or replaces a path in /tagging_db/$tag_input/encoded(img.name)
-          var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj.name));
+          var tagref = tagging_db.child(t).child(filename_2_firekey(this.panel_obj));
           tagref.remove();
         }
       });

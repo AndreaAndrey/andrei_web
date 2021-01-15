@@ -54,7 +54,7 @@
   </div>
   <div style="width: 100%"><hr></div>
 
-  <modal v-if="showModal" @close="showModal = false" :panel_obj="panel_obj"></modal>
+  <modal v-if="showModal" @close="close_modal" :panel_obj="panel_obj" :key="panel_obj"></modal>
 
   <loading :active="isLoading"
         :can-cancel="false"></loading>
@@ -129,7 +129,7 @@ export default {
   data() {
     return {
       images: [],
-      panel_obj: {},
+      panel_obj: null,
       showModal: false,
       isLoading: true,
       fullPage: true,
@@ -151,6 +151,9 @@ export default {
   computed: {
     cache: function () {
       return this.$store.state.cache;
+    },
+    cache_length: function () {
+      return this.$store.state.cache.length;
     },
     total_files: function () {
       return this.file_list.length;
@@ -233,7 +236,7 @@ export default {
         return;
       }
       if(this.page_select > this.max_page){
-        this.page_select = this.max_page
+        this.page_select = this.max_page;
       }
       this.page = this.page_select;
     },
@@ -273,8 +276,12 @@ export default {
     },
     view_image(img){
       console.log(img.name);
-      this.panel_obj= img;
+      this.panel_obj= img.name;
       this.showModal = true;
+    },
+    close_modal(){
+      this.panel_obj= null;
+      this.showModal = false;
     },
     search_by_tag(){
       if(!this.untagged){
