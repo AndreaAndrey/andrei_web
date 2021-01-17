@@ -40,6 +40,11 @@
     <br>
     <button @click="show_untagged">Show Untagged</button>
     <button v-if="untagged" @click="show_all"> X </button>
+    <br>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" id="sort_c" value="sort_c" v-model="sort_c">
+      <label class="form-check-label" for="sort_c">Sort by date</label>
+    </div>
   </div>
 
   <div style="width: 100%;"><hr></div>
@@ -124,6 +129,8 @@ const vid_ext = ["mp4"];
 const aud_ext = ["m4a", "acc", "mp3", "aac"];
 const pdf_ext = ["pdf", "PDF"];
 
+let clean_name = (name) => name.replace("VIDEO-", "").replace("PHOTO-", "").replace("GIF-", "").replace("AUDIO-", "");
+
 export default {
   name: "ImgList",
   data() {
@@ -144,6 +151,7 @@ export default {
       audio_c: false,
       pdf_c: false,
       and_c: true,
+      sort_c: false,
       untagged: false,
       text_on: false
     }
@@ -241,6 +249,7 @@ export default {
       this.page = this.page_select;
     },
     page_changed() {
+      console.log("page changed");
       if(this.page < 1){
         return;
       }
@@ -248,7 +257,16 @@ export default {
       this.isLoading = true;
       this.images = [];
 
-      let children_list = this.file_list.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
+      var clone_list = [...this.file_list];
+      if(this.sort_c){
+        clone_list.sort((a, b) => {
+          const a_s = clean_name(a.name);
+          const b_s = clean_name(b.name);
+          return a_s.localeCompare(b_s);
+        });
+      }
+
+      let children_list = clone_list.slice((this.page-1)*this.per_page, this.page*this.per_page); // Slice it and just get a small amount
 
       Promise.all(children_list.map(async x => {
           let extension = x.name.split('.').pop();
@@ -422,6 +440,10 @@ export default {
       if(this.tag_search){
         this.search_by_tag();
       }
+    },
+    sort_c(){
+      this.page = 1;
+      this.page_changed();
     }
   }
 }

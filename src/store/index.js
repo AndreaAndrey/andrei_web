@@ -24,6 +24,8 @@ let load_attributes = async (file) => {
   );
 };
 
+let clean_name = (name) => name.replace("VIDEO-", "").replace("PHOTO-", "").replace("GIF-", "").replace("AUDIO-", "");
+
 export default createStore({
   state: {
     file_list: [], // list of MEGA files with name, size and the download function
@@ -100,12 +102,21 @@ export default createStore({
   modules: {
   },
   getters: {
-    get_list: (state) => (filter_condition) => {
+    get_list: (state) => (filter_condition, sort=false) => {
+      var list;
       if(filter_condition){
-        return state.file_list.filter(filter_condition);
+        list = state.file_list.filter(filter_condition);
       } else {
-        return state.file_list;
+        list = state.file_list;
       }
+      if(sort){
+        list.sort((a, b) => {
+          const a_s = clean_name(a.name);
+          const b_s = clean_name(b.name);
+          return a_s.localeCompare(b_s);
+        });
+      }
+      return list;
     }
   }
 })
